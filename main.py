@@ -1,4 +1,6 @@
 import PyPDF2
+import os
+import glob
 
 # パスリストを取得する
 def getPassList():
@@ -9,31 +11,38 @@ def getPassList():
         passList.append(line.replace('\n',''))
     return passList
 
+# サーチファイル
+def serchFile(passList) :
+    dirlist=[]
+    # すべてのファイルを取得
+    for name in glob.glob('import/*'):
+        dirlist.append(name)
+    # 該当するファイル名がパスリストを含んでる場合
+    for passAndTitle in passList :
+        title = passAndTitle.split("=")[0]
+        password = passAndTitle.split("=")[1]
+        for dirStr in dirlist :
+            fileName = dirStr.split('/')[1] 
+            if title in fileName :
+                grantPass(fileName,password)
 
 # パスワード付与
-def grantPass(passList) :
-    src_pdf = PyPDF2.PdfFileReader('import/test.pdf',strict=False)
+def grantPass(fileName,password) :
+    src_pdf = PyPDF2.PdfFileReader('import/' + fileName ,strict=False)
     dst_pdf = PyPDF2.PdfFileWriter()
 
     dst_pdf.cloneReaderDocumentRoot(src_pdf)
-    print('ここまできた')
 
-    dst_pdf.encrypt('1234')
+    dst_pdf.encrypt(password)
     d = {key: src_pdf.documentInfo[key] for key in src_pdf.documentInfo.keys()}
     dst_pdf.addMetadata(d)
-    with open('output/test.pdf', 'wb') as pdfFileObj2:
+    with open('output/' + fileName, 'wb') as pdfFileObj2:
         dst_pdf.write(pdfFileObj2)
 
 
-
-
 # メインメソッド
-print('スタート')
-
 # パスリストを取得する。
 passList = getPassList()
 
-for passWord in passList :
-    print(passWord)
-
-grantPass(passList)
+# パス付与
+serchFile(passList)
